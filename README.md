@@ -2,7 +2,7 @@
 
 Enter a hex code, get a color name. No API calls — the name list is bundled and matched locally in CIE Lab space.
 
-Live: https://color.hey5.studio
+Live: https://colors.hey5.studio
 
 ## Files
 
