@@ -265,6 +265,13 @@ body{
 }
 .footer .dot{opacity:.5}
 
+/* empty state */
+.is-empty .pill{display:none}
+.is-empty .copy{opacity:.35;pointer-events:none}
+.is-empty .name{opacity:.45;font-style:italic}
+.is-empty .glow{opacity:.10}
+.is-empty .family{min-height:1em}
+
 /* keyboard focus */
 .copy:focus-visible,
 .segs button:focus-visible,

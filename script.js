@@ -9,17 +9,15 @@ const el = {
   fmt:    document.getElementById('fmt'),
 };
 
-const DEFAULT_HEX = '38485d';
-
 const state = {
-  raw: DEFAULT_HEX,
+  raw: '',
   format: 'dash',
   copied: false,
 };
 
 let copyTimer = null;
 let hashTimer = null;
-let lastValid = DEFAULT_HEX;
+let lastValid = null;
 
 /* ---------- color dataset ---------- */
 
@@ -134,16 +132,26 @@ function normalize(raw){
   return null;
 }
 
+const EMPTY = {
+  hexFull: null,
+  r:0, g:0, b:0, h:0, s:0, l:0,
+  name: '',
+  family: '',
+};
+
 function compute(){
+  if(state.raw === '') return EMPTY;
+
   const resolved = normalize(state.raw);
   const hexFull = resolved || lastValid;
+  if(!hexFull) return EMPTY;
   if(resolved) lastValid = resolved;
 
   const c = hexToRgb(hexFull);
   const hsl = rgbToHsl(c.r, c.g, c.b);
 
   const raw = nearestName(hexFull);
-  const name = raw ? applyFormat(raw, state.format) : '\u2026';
+  const name = raw ? applyFormat(raw, state.format) : '';
 
   return {
     hexFull,
@@ -156,8 +164,38 @@ function compute(){
 
 /* ---------- render ---------- */
 
+function syncTail(){
+  el.fmt.querySelectorAll('button').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.v === state.format);
+  });
+
+  clearTimeout(hashTimer);
+  hashTimer = setTimeout(function(){
+    const valid = normalize(state.raw);
+    try {
+      history.replaceState(null, '', valid ? '#' + state.raw : location.pathname);
+    } catch(_){}
+  }, 250);
+}
+
 function render(){
   const v = compute();
+  const empty = v.hexFull === null;
+
+  document.body.classList.toggle('is-empty', empty);
+
+  if(empty){
+    document.documentElement.style.setProperty('--bg', '#2a2a2e');
+    document.documentElement.style.setProperty('--accent', 'rgba(255,255,255,0.30)');
+    el.family.textContent = '';
+    el.name.textContent   = 'name a color';
+    el.rgb.textContent    = '';
+    el.hsl.textContent    = '';
+    el.copy.textContent   = 'Copy';
+    document.title = 'Name a Color';
+    syncTail();
+    return;
+  }
 
   const aL = Math.min(78, Math.max(v.l, 62));
   const aS = v.s < 12 ? 0 : Math.max(v.s, 45);
@@ -173,21 +211,15 @@ function render(){
 
   document.title = (DB ? v.name + ' \u2014 ' : '') + 'Name a Color';
 
-  el.fmt.querySelectorAll('button').forEach(function(b){
-    b.setAttribute('aria-pressed', b.dataset.v === state.format);
-  });
-
-  clearTimeout(hashTimer);
-  hashTimer = setTimeout(function(){
-    if(normalize(state.raw)){
-      try { history.replaceState(null, '', '#' + state.raw); } catch(_){}
-    }
-  }, 250);
+  syncTail();
 }
 
 /* ---------- clipboard ---------- */
 
 function legacyCopy(text){
+  const active = document.activeElement;
+  const start = active === el.hex ? el.hex.selectionStart : null;
+
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly','');
@@ -196,6 +228,13 @@ function legacyCopy(text){
   ta.select();
   try { document.execCommand('copy'); } catch(_){}
   document.body.removeChild(ta);
+
+  if(active && active.focus){
+    active.focus({ preventScroll: true });
+    if(start !== null){
+      try { el.hex.setSelectionRange(start, start); } catch(_){}
+    }
+  }
 }
 
 function writeClipboard(text){
@@ -208,7 +247,9 @@ function writeClipboard(text){
 
 function doCopy(){
   if(!DB) return;
-  writeClipboard(compute().name);
+  const v = compute();
+  if(!v.hexFull || !v.name) return;
+  writeClipboard(v.name);
   state.copied = true;
   render();
   clearTimeout(copyTimer);
@@ -224,6 +265,9 @@ el.hex.addEventListener('input', function(e){
   render();
 });
 
+el.fmt.addEventListener('mousedown', function(e){
+  if(e.target.closest('button')) e.preventDefault();
+});
 el.fmt.addEventListener('click', function(e){
   const b = e.target.closest('button');
   if(!b) return;
@@ -232,13 +276,21 @@ el.fmt.addEventListener('click', function(e){
   render();
 });
 
+el.copy.addEventListener('mousedown', function(e){ e.preventDefault(); });
 el.copy.addEventListener('click', doCopy);
 
 window.addEventListener('keydown', function(e){
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
-    if(document.activeElement === el.hex) return;
-    const sel = (window.getSelection && window.getSelection().toString()) || '';
-    if(sel.trim() === ''){ e.preventDefault(); doCopy(); }
+    // if the user has selected text (in the input or the page), let the
+    // browser copy that instead
+    if(document.activeElement === el.hex){
+      if(el.hex.selectionStart !== el.hex.selectionEnd) return;
+    } else {
+      const sel = (window.getSelection && window.getSelection().toString()) || '';
+      if(sel.trim() !== '') return;
+    }
+    e.preventDefault();
+    doCopy();
   }
 });
 
@@ -248,9 +300,14 @@ const fromHash = location.hash.replace('#','').toLowerCase();
 if(/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(fromHash)) state.raw = fromHash;
 el.hex.value = state.raw;
 
-if(loadColors()){
-  render();
-} else {
+if(!loadColors()){
   render();
   el.name.textContent = 'offline';
+} else {
+  render();
 }
+
+// focus the field, caret at the end
+el.hex.focus({ preventScroll: true });
+const end = el.hex.value.length;
+try { el.hex.setSelectionRange(end, end); } catch(_){}
