@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name a Color</title>
+<meta name="description" content="Enter a hex code and get a color name.">
+<meta name="theme-color" content="#0c0c0e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="glow" id="glow"></div>
+
+<header class="topbar">
+  <span>Name a Color</span>
+  <span>v2.1</span>
+</header>
+
+<main class="stage">
+
+  <div class="swatch" id="swatch"></div>
+
+  <div class="family" id="family"></div>
+
+  <h1 class="name" id="name" aria-live="polite"></h1>
+
+  <div class="hexwrap">
+    <span class="hash">#</span>
+    <input id="hex" value="38485d" maxlength="6" spellcheck="false"
+           autocapitalize="off" autocomplete="off" aria-label="Hex code">
+  </div>
+
+  <div class="meta">
+    <div class="pills">
+      <span class="pill" id="rgb"></span>
+      <span class="pill" id="hsl"></span>
+    </div>
+    <button class="copy" id="copy" type="button">Copy</button>
+  </div>
+
+  <div class="settings">
+    <div class="group">
+      <div class="grouplabel">Format</div>
+      <div class="segs" id="fmt">
+        <button data-v="title" type="button">Title Case</button>
+        <button data-v="lower" type="button">lowercase</button>
+        <button data-v="dash" type="button">lower-dash</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Tip: press ⌘C / Ctrl+C to copy</div>
+
+</main>
+
+<footer class="footer">
+  <span>Made with ♥ by Alex Ghit</span>
+  <span class="dot">·</span>
+  <a href="mailto:alex@hey5.studio">alex@hey5.studio</a>
+  <span class="dot">·</span>
+  <a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
