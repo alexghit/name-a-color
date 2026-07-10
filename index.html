@@ -30,9 +30,18 @@
 
   <div class="hexwrap">
     <span class="hash">#</span>
-    <input id="hex" value="" maxlength="6" spellcheck="false"
-           placeholder="000000" inputmode="latin"
-           autocapitalize="off" autocomplete="off" autofocus aria-label="Hex code">
+    <input id="hex" type="text" value="" maxlength="6"
+           placeholder="000000"
+           spellcheck="false" autocapitalize="off" autocorrect="off"
+           autocomplete="off" name="hex-code" aria-label="Hex code" autofocus
+           data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">
+    <button id="clear" class="clear" type="button" aria-label="Clear" title="Clear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+      </svg>
+    </button>
   </div>
 
   <div class="meta">
@@ -54,7 +63,7 @@
     </div>
   </div>
 
-  <div class="hint">⌘C / Ctrl+C to copy · Esc to clear</div>
+  <div class="hint">⌘C / Ctrl+C to copy</div>
 
 </main>
 

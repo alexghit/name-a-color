@@ -6,6 +6,7 @@ const el = {
   rgb:    document.getElementById('rgb'),
   hsl:    document.getElementById('hsl'),
   copy:   document.getElementById('copy'),
+  clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
 };
 
@@ -278,6 +279,19 @@ el.fmt.addEventListener('click', function(e){
 
 el.copy.addEventListener('mousedown', function(e){ e.preventDefault(); });
 el.copy.addEventListener('click', doCopy);
+
+el.clear.addEventListener('mousedown', function(e){ e.preventDefault(); });
+el.clear.addEventListener('click', clearAll);
+
+// Esc on the input itself — some browsers (Arc) intercept Escape at the
+// window level, so this local listener catches it when the field is focused.
+el.hex.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    e.preventDefault();
+    e.stopPropagation();
+    clearAll();
+  }
+});
 
 function clearAll(){
   if(state.raw === '') return;
