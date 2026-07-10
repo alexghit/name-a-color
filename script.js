@@ -210,7 +210,7 @@ function render(){
   el.hsl.textContent    = 'HSL ' + v.h + ' ' + v.s + ' ' + v.l;
   el.copy.textContent   = state.copied ? 'Copied \u2713' : 'Copy';
 
-  document.title = (DB ? v.name + ' \u2014 ' : '') + 'Name a Color';
+  document.title = 'Name a Color';
 
   syncTail();
 }
