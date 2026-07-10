@@ -11,7 +11,7 @@ Live: https://color.hey5.studio
 | `index.html` | Markup |
 | `style.css` | Styles |
 | `script.js` | Lab conversion + nearest-name lookup |
-| `colors.json` | 4,420 curated names (1–2 words) |
+| `colors.js` | 4,420 curated names (1–2 words) |
 | `_headers` | Cloudflare cache/security headers |
 
 `preview.html` is a single-file build for local testing. Not deployed.

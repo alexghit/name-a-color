@@ -25,10 +25,10 @@ let lastValid = DEFAULT_HEX;
 
 let DB = null;
 
-async function loadColors(){
-  const res = await fetch('colors.json');
-  if(!res.ok) throw new Error('colors.json');
-  const d = await res.json();
+function loadColors(){
+  const d = window.__COLORS__;
+  if(!d || !d.n || !d.h) return false;
+
   const N = d.n.length;
   const L = new Float32Array(N), A = new Float32Array(N), B = new Float32Array(N);
 
@@ -38,6 +38,7 @@ async function loadColors(){
     L[i] = lab[0]; A[i] = lab[1]; B[i] = lab[2];
   }
   DB = { n: d.n, L, A, B, N };
+  return true;
 }
 
 /* ---------- color math ---------- */
@@ -246,8 +247,10 @@ window.addEventListener('keydown', function(e){
 const fromHash = location.hash.replace('#','').toLowerCase();
 if(/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(fromHash)) state.raw = fromHash;
 el.hex.value = state.raw;
-render();
 
-loadColors()
-  .then(render)
-  .catch(function(){ el.name.textContent = 'offline'; });
+if(loadColors()){
+  render();
+} else {
+  render();
+  el.name.textContent = 'offline';
+}
