@@ -7,19 +7,63 @@
   --ease:cubic-bezier(.22,1,.36,1);
 }
 
-html,body{height:100%}
+html{
+  height:100%;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
 
 body{
   min-height:100vh;
   min-height:100svh;
   width:100%;
+  max-width:100%;
   background:#0c0c0e;
   color:var(--ink);
   font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
   display:flex;
   flex-direction:column;
   position:relative;
-  overflow-x:hidden;
+  overflow-x:clip;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* text selection colour */
+::selection{
+  background:var(--accent);
+  color:#0c0c0e;
+}
+
+/* buttons: no gesture-disambiguation delay on touch */
+button{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* instant press feedback (no transition on the way down) */
+.copy:active,
+.clear:active,
+.segs button:active{
+  transition:none;
+  transform:scale(.94);
+}
+.copy:active{background:rgba(255,255,255,.75)}
+.clear:active{background:rgba(255,255,255,.22)}
+
+/* stop long-press selecting decorative / interactive chrome */
+.topbar,
+.family,
+.name,
+.hash,
+.grouplabel,
+.hint,
+.segs,
+.copy,
+.clear,
+.footer{
+  -webkit-user-select:none;
+  user-select:none;
 }
 
 /* ambient glow */
@@ -27,9 +71,8 @@ body{
   position:absolute;
   top:-25%;
   left:50%;
-  width:960px;
-  height:960px;
-  max-width:180vw;
+  width:min(960px, 140vw);
+  aspect-ratio:1;
   border-radius:50%;
   background:var(--bg);
   filter:blur(200px);
@@ -126,16 +169,24 @@ body{
   color:rgba(255,255,255,.38);
 }
 
-#hex{
-  background:transparent;
-  border:none;
+.hexfield{
+  display:inline-block;
+  min-width:clamp(180px,32vw,300px);
   outline:none;
   color:var(--ink);
   font-family:'Geist Mono',ui-monospace,monospace;
   font-size:clamp(22px,3.4vw,34px);
   letter-spacing:.06em;
-  width:clamp(180px,32vw,300px);
   caret-color:var(--accent);
+  white-space:pre;
+  overflow:hidden;
+  -webkit-user-modify:read-write-plaintext-only;
+  -webkit-touch-callout:none;
+}
+.hexfield:empty::before{
+  content:attr(data-placeholder);
+  color:rgba(255,255,255,.28);
+  pointer-events:none;
 }
 
 .clear{
@@ -151,7 +202,7 @@ body{
   background:rgba(255,255,255,.08);
   color:rgba(255,255,255,.55);
   cursor:pointer;
-  transition:background 180ms, color 180ms, opacity 180ms;
+  transition:background 180ms, color 180ms, opacity 180ms, transform 140ms var(--ease);
 }
 .clear svg{width:13px;height:13px}
 .clear:hover{background:rgba(255,255,255,.16);color:rgba(255,255,255,.9)}
@@ -194,7 +245,7 @@ body{
   border:none;
   border-radius:999px;
   padding:11px 20px;
-  transition:opacity 200ms;
+  transition:opacity 200ms, transform 140ms var(--ease), background 140ms;
 }
 .copy:hover{opacity:.85}
 
@@ -240,7 +291,7 @@ body{
   padding:8px 14px;
   background:transparent;
   color:rgba(255,255,255,.55);
-  transition:background 220ms, color 220ms;
+  transition:background 220ms, color 220ms, transform 140ms var(--ease);
 }
 .segs button:hover{color:rgba(255,255,255,.85)}
 .segs button[aria-pressed="true"]{
@@ -298,7 +349,7 @@ body{
   outline:2px solid var(--accent);
   outline-offset:2px;
 }
-#hex:focus-visible{outline:none}
+.hexfield:focus-visible{outline:none}
 
 @media (max-width:600px){
   .topbar{padding:24px 20px;font-size:11px}

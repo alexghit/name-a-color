@@ -215,11 +215,37 @@ function render(){
   syncTail();
 }
 
+/* ---------- contenteditable field helpers ---------- */
+/* A contenteditable span is used instead of <input> because password
+   managers (notably iCloud Passwords) offer to fill any focused text
+   input and provide no developer opt-out. */
+
+function fieldValue(){
+  return el.hex.textContent;
+}
+
+function setFieldValue(v){
+  if(el.hex.textContent !== v) el.hex.textContent = v;
+}
+
+function caretToEnd(){
+  const r = document.createRange();
+  r.selectNodeContents(el.hex);
+  r.collapse(false);
+  const s = window.getSelection();
+  s.removeAllRanges();
+  s.addRange(r);
+}
+
+function focusField(){
+  el.hex.focus({ preventScroll: true });
+  caretToEnd();
+}
+
 /* ---------- clipboard ---------- */
 
 function legacyCopy(text){
-  const active = document.activeElement;
-  const start = active === el.hex ? el.hex.selectionStart : null;
+  const wasInField = document.activeElement === el.hex;
 
   const ta = document.createElement('textarea');
   ta.value = text;
@@ -230,12 +256,7 @@ function legacyCopy(text){
   try { document.execCommand('copy'); } catch(_){}
   document.body.removeChild(ta);
 
-  if(active && active.focus){
-    active.focus({ preventScroll: true });
-    if(start !== null){
-      try { el.hex.setSelectionRange(start, start); } catch(_){}
-    }
-  }
+  if(wasInField) focusField();
 }
 
 function writeClipboard(text){
@@ -259,17 +280,49 @@ function doCopy(){
 
 /* ---------- events ---------- */
 
-el.hex.addEventListener('input', function(e){
-  state.raw = e.target.value.replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
-  e.target.value = state.raw;
+el.hex.addEventListener('input', function(){
+  const clean = fieldValue().replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  if(clean !== fieldValue()){
+    setFieldValue(clean);
+    caretToEnd();
+  }
+  state.raw = clean;
   state.copied = false;
   render();
 });
 
-el.fmt.addEventListener('mousedown', function(e){
-  if(e.target.closest('button')) e.preventDefault();
+// block newlines and paste formatting
+el.hex.addEventListener('paste', function(e){
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+  const clean = (fieldValue() + text).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  setFieldValue(clean);
+  caretToEnd();
+  state.raw = clean;
+  state.copied = false;
+  render();
 });
-el.fmt.addEventListener('click', function(e){
+
+/* Buttons act on pointerdown for instant response on touch.
+   `click` still fires for keyboard (Enter/Space), so we guard against
+   running the action twice for the same interaction. */
+function fastButton(node, run){
+  let handled = false;
+
+  node.addEventListener('pointerdown', function(e){
+    if(e.button && e.button !== 0) return;   // ignore right/middle click
+    e.preventDefault();                       // keeps focus in the hex field
+    handled = true;
+    run(e);
+  });
+
+  node.addEventListener('click', function(e){
+    if(handled){ handled = false; return; }   // pointer already ran it
+    run(e);                                   // keyboard activation
+  });
+}
+
+fastButton(el.fmt, function(e){
   const b = e.target.closest('button');
   if(!b) return;
   state.format = b.dataset.v;
@@ -277,15 +330,16 @@ el.fmt.addEventListener('click', function(e){
   render();
 });
 
-el.copy.addEventListener('mousedown', function(e){ e.preventDefault(); });
-el.copy.addEventListener('click', doCopy);
-
-el.clear.addEventListener('mousedown', function(e){ e.preventDefault(); });
-el.clear.addEventListener('click', clearAll);
+fastButton(el.copy, doCopy);
+fastButton(el.clear, clearAll);
 
 // Esc on the input itself — some browsers (Arc) intercept Escape at the
 // window level, so this local listener catches it when the field is focused.
 el.hex.addEventListener('keydown', function(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    return;
+  }
   if(e.key === 'Escape'){
     e.preventDefault();
     e.stopPropagation();
@@ -298,9 +352,9 @@ function clearAll(){
   state.raw = '';
   lastValid = null;
   state.copied = false;
-  el.hex.value = '';
+  setFieldValue('');
   render();
-  el.hex.focus({ preventScroll: true });
+  focusField();
 }
 
 window.addEventListener('keydown', function(e){
@@ -311,14 +365,9 @@ window.addEventListener('keydown', function(e){
   }
 
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
-    // if the user has selected text (in the input or the page), let the
-    // browser copy that instead
-    if(document.activeElement === el.hex){
-      if(el.hex.selectionStart !== el.hex.selectionEnd) return;
-    } else {
-      const sel = (window.getSelection && window.getSelection().toString()) || '';
-      if(sel.trim() !== '') return;
-    }
+    // if the user has selected text anywhere, let the browser copy it
+    const sel = (window.getSelection && window.getSelection().toString()) || '';
+    if(sel.trim() !== '') return;
     e.preventDefault();
     doCopy();
   }
@@ -328,7 +377,7 @@ window.addEventListener('keydown', function(e){
 
 const fromHash = location.hash.replace('#','').toLowerCase();
 if(/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(fromHash)) state.raw = fromHash;
-el.hex.value = state.raw;
+setFieldValue(state.raw);
 
 if(!loadColors()){
   render();
@@ -337,7 +386,7 @@ if(!loadColors()){
   render();
 }
 
-// focus the field, caret at the end
-el.hex.focus({ preventScroll: true });
-const end = el.hex.value.length;
-try { el.hex.setSelectionRange(end, end); } catch(_){}
+// Focus on desktop only — auto-opening the keyboard on mobile is jarring.
+const isDesktop = window.matchMedia &&
+  window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+if(isDesktop) focusField();
