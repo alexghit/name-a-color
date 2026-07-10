@@ -279,7 +279,23 @@ el.fmt.addEventListener('click', function(e){
 el.copy.addEventListener('mousedown', function(e){ e.preventDefault(); });
 el.copy.addEventListener('click', doCopy);
 
+function clearAll(){
+  if(state.raw === '') return;
+  state.raw = '';
+  lastValid = null;
+  state.copied = false;
+  el.hex.value = '';
+  render();
+  el.hex.focus({ preventScroll: true });
+}
+
 window.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    e.preventDefault();
+    clearAll();
+    return;
+  }
+
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
     // if the user has selected text (in the input or the page), let the
     // browser copy that instead

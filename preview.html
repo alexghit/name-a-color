@@ -13,8 +13,8 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --bg:#38485d;
-  --accent:hsl(213 45% 62%);
+  --bg:#2a2a2e;
+  --accent:rgba(255,255,255,0.30);
   --ink:rgba(255,255,255,0.94);
   --ease:cubic-bezier(.22,1,.36,1);
 }
@@ -312,7 +312,7 @@ body{
 
 </style>
 </head>
-<body>
+<body class="is-empty">
 
 <div class="glow" id="glow"></div>
 
@@ -327,7 +327,7 @@ body{
 
   <div class="family" id="family"></div>
 
-  <h1 class="name" id="name" aria-live="polite"></h1>
+  <h1 class="name" id="name" aria-live="polite">name a color</h1>
 
   <div class="hexwrap">
     <span class="hash">#</span>
@@ -355,7 +355,7 @@ body{
     </div>
   </div>
 
-  <div class="hint">Tip: press ⌘C / Ctrl+C to copy</div>
+  <div class="hint">⌘C / Ctrl+C to copy · Esc to clear</div>
 
 </main>
 
@@ -652,7 +652,23 @@ el.fmt.addEventListener('click', function(e){
 el.copy.addEventListener('mousedown', function(e){ e.preventDefault(); });
 el.copy.addEventListener('click', doCopy);
 
+function clearAll(){
+  if(state.raw === '') return;
+  state.raw = '';
+  lastValid = null;
+  state.copied = false;
+  el.hex.value = '';
+  render();
+  el.hex.focus({ preventScroll: true });
+}
+
 window.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    e.preventDefault();
+    clearAll();
+    return;
+  }
+
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
     // if the user has selected text (in the input or the page), let the
     // browser copy that instead

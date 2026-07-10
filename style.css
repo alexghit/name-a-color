@@ -1,8 +1,8 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --bg:#38485d;
-  --accent:hsl(213 45% 62%);
+  --bg:#2a2a2e;
+  --accent:rgba(255,255,255,0.30);
   --ink:rgba(255,255,255,0.94);
   --ease:cubic-bezier(.22,1,.36,1);
 }
