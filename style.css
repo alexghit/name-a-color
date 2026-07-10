@@ -1,0 +1,292 @@
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#38485d;
+  --accent:hsl(213 45% 62%);
+  --ink:rgba(255,255,255,0.94);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+html,body{height:100%}
+
+body{
+  min-height:100vh;
+  min-height:100svh;
+  width:100%;
+  background:#0c0c0e;
+  color:var(--ink);
+  font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* ambient glow */
+.glow{
+  position:absolute;
+  top:-25%;
+  left:50%;
+  width:960px;
+  height:960px;
+  max-width:180vw;
+  border-radius:50%;
+  background:var(--bg);
+  filter:blur(200px);
+  opacity:.24;
+  transition:background 900ms var(--ease), opacity 900ms var(--ease);
+  animation:glowdrift 14s ease-in-out infinite;
+  will-change:transform;
+  pointer-events:none;
+}
+@keyframes glowdrift{
+  0%{transform:translate(-50%,0) scale(1)}
+  50%{transform:translate(-50%,2%) scale(1.06)}
+  100%{transform:translate(-50%,0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .glow{animation:none}
+  *{transition-duration:.01ms !important}
+}
+
+/* top bar */
+.topbar{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:32px 40px;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:12px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+}
+
+/* center stage */
+.stage{
+  position:relative;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 24px 24px;
+}
+
+.swatch{
+  width:92px;
+  height:92px;
+  border-radius:22px;
+  background:var(--bg);
+  box-shadow:0 24px 60px -18px var(--bg), inset 0 0 0 1px rgba(255,255,255,.08);
+  transition:background 900ms var(--ease), box-shadow 900ms var(--ease);
+  margin-bottom:30px;
+}
+
+.family{
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:12px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.42);
+  margin-bottom:18px;
+}
+
+.name{
+  font-family:'Instrument Serif',Georgia,serif;
+  font-weight:400;
+  font-size:clamp(34px,9vw,140px);
+  line-height:.98;
+  letter-spacing:-.01em;
+  text-wrap:balance;
+  color:var(--accent);
+  transition:color 700ms var(--ease);
+  max-width:100%;
+  overflow-wrap:break-word;
+  hyphens:auto;
+}
+
+/* hex input */
+.hexwrap{
+  margin-top:44px;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  border-bottom:1.5px solid rgba(255,255,255,.16);
+  padding:6px 4px 10px;
+  transition:border-color 300ms;
+}
+.hexwrap:focus-within{border-bottom-color:rgba(255,255,255,.4)}
+
+.hash{
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:clamp(22px,3.4vw,34px);
+  color:rgba(255,255,255,.38);
+}
+
+#hex{
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--ink);
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:clamp(22px,3.4vw,34px);
+  letter-spacing:.06em;
+  width:clamp(180px,32vw,300px);
+  caret-color:var(--accent);
+}
+
+/* meta + copy */
+.meta{
+  margin-top:36px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.pills{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:12px;
+  letter-spacing:.04em;
+  color:rgba(255,255,255,.6);
+}
+.pill{
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;
+  padding:8px 14px;
+  white-space:nowrap;
+}
+
+.copy{
+  cursor:pointer;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:12px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#0c0c0e;
+  background:rgba(255,255,255,.94);
+  border:none;
+  border-radius:999px;
+  padding:11px 20px;
+  transition:opacity 200ms;
+}
+.copy:hover{opacity:.85}
+
+/* settings */
+.settings{
+  margin-top:40px;
+  display:flex;
+  gap:36px;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:flex-start;
+}
+.group{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.grouplabel{
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:10px;
+  letter-spacing:.26em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.35);
+}
+.segs{
+  display:flex;
+  gap:4px;
+  max-width:100%;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;
+  padding:4px;
+}
+.segs button{
+  cursor:pointer;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:11px;
+  letter-spacing:.04em;
+  white-space:nowrap;
+  border:none;
+  border-radius:999px;
+  padding:8px 14px;
+  background:transparent;
+  color:rgba(255,255,255,.55);
+  transition:background 220ms, color 220ms;
+}
+.segs button:hover{color:rgba(255,255,255,.85)}
+.segs button[aria-pressed="true"]{
+  background:rgba(255,255,255,.92);
+  color:#0c0c0e;
+}
+
+.hint{
+  margin-top:22px;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:11px;
+  letter-spacing:.06em;
+  color:rgba(255,255,255,.3);
+}
+
+/* footer */
+.footer{
+  position:relative;
+  flex-shrink:0;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  padding:28px 24px 32px;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:11px;
+  letter-spacing:.04em;
+  color:rgba(255,255,255,.32);
+  text-align:center;
+}
+.footer a{
+  color:rgba(255,255,255,.52);
+  text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,.16);
+  transition:color 200ms, border-color 200ms;
+}
+.footer a:hover{
+  color:rgba(255,255,255,.85);
+  border-bottom-color:rgba(255,255,255,.4);
+}
+.footer .dot{opacity:.5}
+
+/* keyboard focus */
+.copy:focus-visible,
+.segs button:focus-visible,
+.footer a:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+#hex:focus-visible{outline:none}
+
+@media (max-width:600px){
+  .topbar{padding:24px 20px;font-size:11px}
+  .stage{padding:0 16px 24px}
+  .settings{gap:24px}
+  .footer{gap:6px;font-size:10px;line-height:1.6}
+  .footer .dot{display:none}
+  .footer > span,.footer > a{flex-basis:100%}
+}
+
+@media (max-width:380px){
+  .segs button{padding:8px 9px;font-size:10px;letter-spacing:0}
+  .swatch{width:76px;height:76px;border-radius:18px;margin-bottom:24px}
+  .hexwrap{margin-top:32px}
+  .meta{margin-top:28px}
+  .settings{margin-top:32px}
+}
