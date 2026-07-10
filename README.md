@@ -2,7 +2,7 @@
 
 Enter a hex code, get a color name. No API calls — the name list is bundled and matched locally in CIE Lab space.
 
-Live: https://colors.hey5.studio
+Live: https://color.hey5.studio
 
 ## Files
 
@@ -13,6 +13,10 @@ Live: https://colors.hey5.studio
 | `script.js` | Lab conversion + nearest-name lookup |
 | `colors.js` | 4,420 curated names (1–2 words) |
 | `_headers` | Cloudflare cache/security headers |
+| `favicon.ico` `favicon.svg` | Browser tab icons |
+| `apple-touch-icon.png` | iOS home screen (180×180) |
+| `icon-192.png` `icon-512.png` `icon-512-maskable.png` | PWA icons |
+| `site.webmanifest` | PWA manifest |
 
 `preview.html` is a single-file build for local testing. Not deployed.
 
