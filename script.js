@@ -21,6 +21,7 @@ const state = {
 
 let copyTimer = null;
 let hashTimer = null;
+let lastPushed = null;
 
 /* ---------- color dataset ---------- */
 
@@ -173,8 +174,16 @@ function syncTail(){
   clearTimeout(hashTimer);
   hashTimer = setTimeout(function(){
     const valid = normalize(state.raw);
+    const url = valid ? '#' + valid : location.pathname;
     try {
-      history.replaceState(null, '', valid ? '#' + state.raw : location.pathname);
+      // new distinct color -> add a history entry so browser Back works
+      if(valid && valid !== lastPushed){
+        history.pushState(null, '', url);
+        lastPushed = valid;
+      } else {
+        history.replaceState(null, '', url);
+        if(!valid) lastPushed = null;
+      }
     } catch(_){}
   }, 250);
 }
@@ -455,6 +464,18 @@ fastButton(el.glowToggle, function(){
 const fromHash = location.hash.replace('#','').toLowerCase();
 if(/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(fromHash)) state.raw = fromHash;
 setFieldValue(state.raw);
+lastPushed = normalize(state.raw);
+
+// browser back/forward -> load the color from the URL
+window.addEventListener('popstate', function(){
+  const h = location.hash.replace('#','').toLowerCase();
+  const valid = /^([0-9a-f]{3}|[0-9a-f]{6})$/.test(h);
+  state.raw = valid ? h : '';
+  lastPushed = valid ? normalize(h) : null;
+  state.copied = false;
+  setFieldValue(state.raw);
+  render();
+});
 
 if(!loadColors()){
   render();
