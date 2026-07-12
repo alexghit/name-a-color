@@ -116,6 +116,41 @@ button{
   *{transition-duration:.01ms !important}
 }
 
+/* hide glow when toggled off */
+body.no-glow .glow{opacity:0 !important}
+
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.glowtoggle{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  height:26px;
+  padding:0 10px 0 8px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  color:rgba(255,255,255,.6);
+  cursor:pointer;
+  font-family:'Geist Mono',ui-monospace,monospace;
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  transition:background 200ms, color 200ms, border-color 200ms;
+}
+.glowtoggle svg{width:14px;height:14px;flex:none}
+.glowtoggle .glow-off{display:none}
+.glowtoggle[aria-pressed="false"] .glow-on{display:none}
+.glowtoggle[aria-pressed="false"] .glow-off{display:block}
+.glowtoggle:hover{color:rgba(255,255,255,.92);border-color:rgba(255,255,255,.25)}
+.glowtoggle[aria-pressed="false"]{
+  color:rgba(255,255,255,.4);
+  background:transparent;
+}
+
 /* top bar */
 .topbar{
   position:relative;
@@ -400,7 +435,20 @@ button{
 
 <header class="topbar">
   <span>Name a Color</span>
-  <span>v2.1</span>
+  <div class="topbar-right">
+    <button id="glowToggle" class="glowtoggle" type="button" aria-pressed="true" aria-label="Toggle background glow" title="Toggle glow">
+      <svg class="glow-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+      </svg>
+      <svg class="glow-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M2 12h2M20 12h2M12 20v2"></path>
+        <line x1="3" y1="3" x2="21" y2="21"></line>
+      </svg>
+      <span class="glowtoggle-label">Glow</span>
+    </button>
+  </div>
 </header>
 
 <main class="stage">
@@ -421,7 +469,7 @@ button{
           autocorrect="off"
           autocapitalize="off"
           data-placeholder="000000"></span>
-    <button id="clear" class="clear" type="button" aria-label="Clear" title="Clear">
+    <button id="clear" class="clear" type="button" aria-label="Clear" title="Esc to clear">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" aria-hidden="true">
         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -459,6 +507,8 @@ button{
   <a href="mailto:alex@hey5.studio">alex@hey5.studio</a>
   <span class="dot">·</span>
   <a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)
+  <span class="dot">·</span>
+  <span>v2.2</span>
 </footer>
 
 <script>
@@ -475,12 +525,14 @@ const el = {
   copy:   document.getElementById('copy'),
   clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
+  glowToggle: document.getElementById('glowToggle'),
 };
 
 const state = {
   raw: '',
   format: 'dash',
   copied: false,
+  copiedWhat: 'name',
 };
 
 let copyTimer = null;
@@ -675,7 +727,9 @@ function render(){
   el.name.textContent   = v.name;
   el.rgb.textContent    = 'RGB ' + v.r + ' ' + v.g + ' ' + v.b;
   el.hsl.textContent    = 'HSL ' + v.h + ' ' + v.s + ' ' + v.l;
-  el.copy.textContent   = state.copied ? 'Copied \u2713' : 'Copy';
+  el.copy.textContent   = state.copied
+    ? (state.copiedWhat === 'hex' ? 'Hex copied \u2713' : 'Name copied \u2713')
+    : (copyingHex() ? 'Copy hex' : 'Copy name');
 
   document.title = (DB ? v.name + ' \u2014 ' : '') + 'Name a Color';
 
@@ -699,6 +753,14 @@ function caretToEnd(){
   const r = document.createRange();
   r.selectNodeContents(el.hex);
   r.collapse(false);
+  const s = window.getSelection();
+  s.removeAllRanges();
+  s.addRange(r);
+}
+
+function selectField(){
+  const r = document.createRange();
+  r.selectNodeContents(el.hex);
   const s = window.getSelection();
   s.removeAllRanges();
   s.addRange(r);
@@ -734,12 +796,19 @@ function writeClipboard(text){
   }
 }
 
+function copyingHex(){
+  const sel = window.getSelection && window.getSelection();
+  return !!(sel && sel.toString().trim() !== '' && el.hex.contains(sel.anchorNode));
+}
+
 function doCopy(){
   if(!DB) return;
   const v = compute();
   if(!v.hexFull || !v.name) return;
-  writeClipboard(v.name);
+  const hex = copyingHex();
+  writeClipboard(hex ? v.hexFull : v.name);
   state.copied = true;
+  state.copiedWhat = hex ? 'hex' : 'name';
   render();
   clearTimeout(copyTimer);
   copyTimer = setTimeout(function(){ state.copied = false; render(); }, 1600);
@@ -758,11 +827,28 @@ el.hex.addEventListener('input', function(){
   render();
 });
 
-// block newlines and paste formatting
+document.addEventListener('selectionchange', function(){
+  if(state.raw !== '') render();
+});
+
+// block newlines and paste formatting; paste replaces the selected text
 el.hex.addEventListener('paste', function(e){
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-  const clean = (fieldValue() + text).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  const pasted = text.replace(/[^0-9a-fA-F]/g,'').toLowerCase();
+
+  const cur = fieldValue();
+  const sel = window.getSelection();
+  let start = cur.length, end = cur.length;
+
+  if(sel && sel.rangeCount && el.hex.contains(sel.anchorNode)){
+    start = Math.min(sel.anchorOffset, sel.focusOffset);
+    end   = Math.max(sel.anchorOffset, sel.focusOffset);
+  }
+
+  const clean = (cur.slice(0,start) + pasted + cur.slice(end))
+    .replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+
   setFieldValue(clean);
   caretToEnd();
   state.raw = clean;
@@ -831,13 +917,56 @@ window.addEventListener('keydown', function(e){
     return;
   }
 
+  if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'a'){
+    e.preventDefault();
+    el.hex.focus({ preventScroll: true });
+    selectField();
+    return;
+  }
+
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
-    // if the user has selected text anywhere, let the browser copy it
+    // hex selected -> copy hex via doCopy; other text selected -> let browser copy
     const sel = (window.getSelection && window.getSelection().toString()) || '';
-    if(sel.trim() !== '') return;
+    if(sel.trim() !== '' && !copyingHex()) return;
     e.preventDefault();
     doCopy();
+    return;
   }
+
+  // type-ahead: typing a hex char anywhere focuses the field and adds it
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(document.activeElement === el.hex) return;
+  if(/^[0-9a-fA-F]$/.test(e.key)){
+    e.preventDefault();
+    const clean = (fieldValue() + e.key).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+    setFieldValue(clean);
+    state.raw = clean;
+    state.copied = false;
+    render();
+    focusField();
+  }
+});
+
+/* ---------- glow toggle ---------- */
+
+function setGlow(on){
+  document.body.classList.toggle('no-glow', !on);
+  el.glowToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+  try { localStorage.setItem('glow', on ? '1' : '0'); } catch(_){}
+}
+
+(function initGlow(){
+  let on = true;
+  try {
+    const saved = localStorage.getItem('glow');
+    if(saved !== null) on = saved === '1';
+    else if(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) on = false;
+  } catch(_){}
+  setGlow(on);
+})();
+
+fastButton(el.glowToggle, function(){
+  setGlow(document.body.classList.contains('no-glow'));
 });
 
 /* ---------- init ---------- */
