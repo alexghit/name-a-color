@@ -8,12 +8,14 @@ const el = {
   copy:   document.getElementById('copy'),
   clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
+  glowToggle: document.getElementById('glowToggle'),
 };
 
 const state = {
   raw: '',
   format: 'dash',
   copied: false,
+  copiedWhat: 'name',
 };
 
 let copyTimer = null;
@@ -208,7 +210,9 @@ function render(){
   el.name.textContent   = v.name;
   el.rgb.textContent    = 'RGB ' + v.r + ' ' + v.g + ' ' + v.b;
   el.hsl.textContent    = 'HSL ' + v.h + ' ' + v.s + ' ' + v.l;
-  el.copy.textContent   = state.copied ? 'Copied \u2713' : 'Copy';
+  el.copy.textContent   = state.copied
+    ? (state.copiedWhat === 'hex' ? 'Hex copied \u2713' : 'Name copied \u2713')
+    : (copyingHex() ? 'Copy hex' : 'Copy name');
 
   document.title = 'Name a Color';
 
@@ -275,12 +279,19 @@ function writeClipboard(text){
   }
 }
 
+function copyingHex(){
+  const sel = window.getSelection && window.getSelection();
+  return !!(sel && sel.toString().trim() !== '' && el.hex.contains(sel.anchorNode));
+}
+
 function doCopy(){
   if(!DB) return;
   const v = compute();
   if(!v.hexFull || !v.name) return;
-  writeClipboard(v.name);
+  const hex = copyingHex();
+  writeClipboard(hex ? v.hexFull : v.name);
   state.copied = true;
+  state.copiedWhat = hex ? 'hex' : 'name';
   render();
   clearTimeout(copyTimer);
   copyTimer = setTimeout(function(){ state.copied = false; render(); }, 1600);
@@ -297,6 +308,10 @@ el.hex.addEventListener('input', function(){
   state.raw = clean;
   state.copied = false;
   render();
+});
+
+document.addEventListener('selectionchange', function(){
+  if(state.raw !== '') render();
 });
 
 // block newlines and paste formatting; paste replaces the selected text
@@ -393,12 +408,48 @@ window.addEventListener('keydown', function(e){
   }
 
   if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'c'){
-    // if the user has selected text anywhere, let the browser copy it
+    // hex selected -> copy hex via doCopy; other text selected -> let browser copy
     const sel = (window.getSelection && window.getSelection().toString()) || '';
-    if(sel.trim() !== '') return;
+    if(sel.trim() !== '' && !copyingHex()) return;
     e.preventDefault();
     doCopy();
+    return;
   }
+
+  // type-ahead: typing a hex char anywhere focuses the field and adds it
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(document.activeElement === el.hex) return;
+  if(/^[0-9a-fA-F]$/.test(e.key)){
+    e.preventDefault();
+    const clean = (fieldValue() + e.key).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+    setFieldValue(clean);
+    state.raw = clean;
+    state.copied = false;
+    render();
+    focusField();
+  }
+});
+
+/* ---------- glow toggle ---------- */
+
+function setGlow(on){
+  document.body.classList.toggle('no-glow', !on);
+  el.glowToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+  try { localStorage.setItem('glow', on ? '1' : '0'); } catch(_){}
+}
+
+(function initGlow(){
+  let on = true;
+  try {
+    const saved = localStorage.getItem('glow');
+    if(saved !== null) on = saved === '1';
+    else if(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) on = false;
+  } catch(_){}
+  setGlow(on);
+})();
+
+fastButton(el.glowToggle, function(){
+  setGlow(document.body.classList.contains('no-glow'));
 });
 
 /* ---------- init ---------- */
