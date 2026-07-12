@@ -291,11 +291,24 @@ el.hex.addEventListener('input', function(){
   render();
 });
 
-// block newlines and paste formatting
+// block newlines and paste formatting; paste replaces the selected text
 el.hex.addEventListener('paste', function(e){
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-  const clean = (fieldValue() + text).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  const pasted = text.replace(/[^0-9a-fA-F]/g,'').toLowerCase();
+
+  const cur = fieldValue();
+  const sel = window.getSelection();
+  let start = cur.length, end = cur.length;
+
+  if(sel && sel.rangeCount && el.hex.contains(sel.anchorNode)){
+    start = Math.min(sel.anchorOffset, sel.focusOffset);
+    end   = Math.max(sel.anchorOffset, sel.focusOffset);
+  }
+
+  const clean = (cur.slice(0,start) + pasted + cur.slice(end))
+    .replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+
   setFieldValue(clean);
   caretToEnd();
   state.raw = clean;
