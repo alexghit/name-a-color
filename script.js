@@ -237,6 +237,14 @@ function caretToEnd(){
   s.addRange(r);
 }
 
+function selectField(){
+  const r = document.createRange();
+  r.selectNodeContents(el.hex);
+  const s = window.getSelection();
+  s.removeAllRanges();
+  s.addRange(r);
+}
+
 function focusField(){
   el.hex.focus({ preventScroll: true });
   caretToEnd();
@@ -374,6 +382,13 @@ window.addEventListener('keydown', function(e){
   if(e.key === 'Escape'){
     e.preventDefault();
     clearAll();
+    return;
+  }
+
+  if((e.metaKey || e.ctrlKey) && (e.key || '').toLowerCase() === 'a'){
+    e.preventDefault();
+    el.hex.focus({ preventScroll: true });
+    selectField();
     return;
   }
 
