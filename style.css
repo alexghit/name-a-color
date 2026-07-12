@@ -140,6 +140,18 @@ body.no-glow .glow{opacity:0 !important}
   text-transform:uppercase;
   color:rgba(255,255,255,.5);
 }
+.wordmark{
+  font:inherit;
+  letter-spacing:inherit;
+  text-transform:inherit;
+  color:inherit;
+  background:none;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  transition:color 200ms;
+}
+.wordmark:hover{color:rgba(255,255,255,.85)}
 
 /* center stage */
 .stage{
@@ -158,7 +170,7 @@ body.no-glow .glow{opacity:0 !important}
   height:92px;
   border-radius:22px;
   background:var(--bg);
-  box-shadow:0 24px 60px -18px var(--bg), inset 0 0 0 1px rgba(255,255,255,.08);
+  box-shadow:0 24px 60px -18px var(--bg), inset 0 0 0 1px rgba(255,255,255,.14);
   transition:background 900ms var(--ease), box-shadow 900ms var(--ease);
   margin-bottom:30px;
 }
@@ -390,9 +402,18 @@ body.no-glow .glow{opacity:0 !important}
   .topbar{padding:24px 20px;font-size:11px}
   .stage{padding:0 16px 24px}
   .settings{gap:24px}
-  .footer{gap:6px;font-size:10px;line-height:1.6}
+  .footer{
+    flex-direction:column;
+    gap:14px;
+    font-size:11px;
+    line-height:1.5;
+    padding:24px 20px 30px;
+  }
   .footer .dot{display:none}
-  .footer > span,.footer > a{flex-basis:100%}
+  .footer a{
+    display:inline;
+    border-bottom-width:1px;
+  }
 }
 
 @media (max-width:380px){

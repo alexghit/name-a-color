@@ -4,6 +4,20 @@ Enter a hex code, get a color name. No API calls — the name list is bundled an
 
 Live: https://colors.hey5.studio
 
+## Features
+
+- Type any hex character anywhere on the page to start — the field focuses automatically.
+- Paste over the selected hex to replace it instantly.
+- Glow toggle (top-right) turns off the animated background glow for reduced-motion / accessibility. Remembered per browser; defaults off if the OS has reduced-motion enabled.
+
+### Shortcuts
+
+| Key | Action |
+|---|---|
+| `Cmd/Ctrl` + `A` | Select the hex code |
+| `Cmd/Ctrl` + `C` | Copy hex if selected, otherwise the color name |
+| `Esc` | Clear |
+
 ## Files
 
 | File | Purpose |

@@ -164,7 +164,18 @@ body.no-glow .glow{opacity:0 !important}
   text-transform:uppercase;
   color:rgba(255,255,255,.5);
 }
-
+.wordmark{
+  font:inherit;
+  letter-spacing:inherit;
+  text-transform:inherit;
+  color:inherit;
+  background:none;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  transition:color 200ms;
+}
+.wordmark:hover{color:rgba(255,255,255,.85)}
 /* center stage */
 .stage{
   position:relative;
@@ -182,7 +193,7 @@ body.no-glow .glow{opacity:0 !important}
   height:92px;
   border-radius:22px;
   background:var(--bg);
-  box-shadow:0 24px 60px -18px var(--bg), inset 0 0 0 1px rgba(255,255,255,.08);
+  box-shadow:0 24px 60px -18px var(--bg), inset 0 0 0 1px rgba(255,255,255,.14);
   transition:background 900ms var(--ease), box-shadow 900ms var(--ease);
   margin-bottom:30px;
 }
@@ -414,9 +425,18 @@ body.no-glow .glow{opacity:0 !important}
   .topbar{padding:24px 20px;font-size:11px}
   .stage{padding:0 16px 24px}
   .settings{gap:24px}
-  .footer{gap:6px;font-size:10px;line-height:1.6}
+  .footer{
+    flex-direction:column;
+    gap:14px;
+    font-size:11px;
+    line-height:1.5;
+    padding:24px 20px 30px;
+  }
   .footer .dot{display:none}
-  .footer > span,.footer > a{flex-basis:100%}
+  .footer a{
+    display:inline;
+    border-bottom-width:1px;
+  }
 }
 
 @media (max-width:380px){
@@ -434,7 +454,7 @@ body.no-glow .glow{opacity:0 !important}
 <div class="glow" id="glow"></div>
 
 <header class="topbar">
-  <span>Name a Color</span>
+  <button id="home" class="wordmark" type="button">Name a Color</button>
   <div class="topbar-right">
     <button id="glowToggle" class="glowtoggle" type="button" aria-pressed="true" aria-label="Toggle background glow" title="Toggle glow">
       <svg class="glow-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -506,7 +526,7 @@ body.no-glow .glow{opacity:0 !important}
   <span class="dot">·</span>
   <a href="mailto:alex@hey5.studio">alex@hey5.studio</a>
   <span class="dot">·</span>
-  <a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)
+  <span><a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)</span>
   <span class="dot">·</span>
   <span>v2.2</span>
 </footer>
@@ -526,6 +546,7 @@ const el = {
   clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
   glowToggle: document.getElementById('glowToggle'),
+  home:   document.getElementById('home'),
 };
 
 const state = {
@@ -537,7 +558,6 @@ const state = {
 
 let copyTimer = null;
 let hashTimer = null;
-let lastValid = null;
 
 /* ---------- color dataset ---------- */
 
@@ -662,10 +682,8 @@ const EMPTY = {
 function compute(){
   if(state.raw === '') return EMPTY;
 
-  const resolved = normalize(state.raw);
-  const hexFull = resolved || lastValid;
+  const hexFull = normalize(state.raw);
   if(!hexFull) return EMPTY;
-  if(resolved) lastValid = resolved;
 
   const c = hexToRgb(hexFull);
   const hsl = rgbToHsl(c.r, c.g, c.b);
@@ -885,6 +903,7 @@ fastButton(el.fmt, function(e){
 
 fastButton(el.copy, doCopy);
 fastButton(el.clear, clearAll);
+fastButton(el.home, clearAll);
 
 // Esc on the input itself — some browsers (Arc) intercept Escape at the
 // window level, so this local listener catches it when the field is focused.
@@ -903,7 +922,6 @@ el.hex.addEventListener('keydown', function(e){
 function clearAll(){
   if(state.raw === '') return;
   state.raw = '';
-  lastValid = null;
   state.copied = false;
   setFieldValue('');
   render();

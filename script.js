@@ -9,6 +9,7 @@ const el = {
   clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
   glowToggle: document.getElementById('glowToggle'),
+  home:   document.getElementById('home'),
 };
 
 const state = {
@@ -20,7 +21,6 @@ const state = {
 
 let copyTimer = null;
 let hashTimer = null;
-let lastValid = null;
 
 /* ---------- color dataset ---------- */
 
@@ -145,10 +145,8 @@ const EMPTY = {
 function compute(){
   if(state.raw === '') return EMPTY;
 
-  const resolved = normalize(state.raw);
-  const hexFull = resolved || lastValid;
+  const hexFull = normalize(state.raw);
   if(!hexFull) return EMPTY;
-  if(resolved) lastValid = resolved;
 
   const c = hexToRgb(hexFull);
   const hsl = rgbToHsl(c.r, c.g, c.b);
@@ -368,6 +366,7 @@ fastButton(el.fmt, function(e){
 
 fastButton(el.copy, doCopy);
 fastButton(el.clear, clearAll);
+fastButton(el.home, clearAll);
 
 // Esc on the input itself — some browsers (Arc) intercept Escape at the
 // window level, so this local listener catches it when the field is focused.
@@ -386,7 +385,6 @@ el.hex.addEventListener('keydown', function(e){
 function clearAll(){
   if(state.raw === '') return;
   state.raw = '';
-  lastValid = null;
   state.copied = false;
   setFieldValue('');
   render();
