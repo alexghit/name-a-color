@@ -45,3 +45,4 @@ Cloudflare Pages → connect repo → build command empty, output directory `/`.
 Color names from [color-names](https://github.com/meodai/color-names) by David Aerne, MIT licensed. See `LICENSE-color-names.txt`.
 
 Built by Alex Ghit — alex@hey5.studio
+
