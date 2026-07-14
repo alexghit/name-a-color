@@ -279,6 +279,17 @@ body.no-glow .glow{opacity:0 !important}
   border-radius:999px;
   padding:8px 14px;
   white-space:nowrap;
+  cursor:pointer;
+  transition:border-color 140ms var(--ease), background 140ms var(--ease);
+}
+.pill:hover{
+  border-color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.05);
+}
+.pill:active{transform:translateY(1px)}
+.pill.copied{
+  border-color:rgba(255,255,255,.4);
+  background:rgba(255,255,255,.08);
 }
 
 .copy{
@@ -347,7 +358,7 @@ body.no-glow .glow{opacity:0 !important}
 }
 
 .hint{
-  margin-top:22px;
+  margin-top:34px;
   font-family:'Geist Mono',ui-monospace,monospace;
   font-size:11px;
   letter-spacing:.06em;

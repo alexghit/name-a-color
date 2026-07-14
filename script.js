@@ -8,12 +8,15 @@ const el = {
   copy:   document.getElementById('copy'),
   clear:  document.getElementById('clear'),
   fmt:    document.getElementById('fmt'),
+  mode:   document.getElementById('mode'),
+  hash:   document.querySelector('.hash'),
   glowToggle: document.getElementById('glowToggle'),
   home:   document.getElementById('home'),
 };
 
 const state = {
   raw: '',
+  mode: 'hex',
   format: 'dash',
   copied: false,
   copiedWhat: 'name',
@@ -48,6 +51,119 @@ function loadColors(){
 function hexToRgb(h){
   const n = parseInt(h, 16);
   return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
+
+/* ---------- input modes ---------- */
+
+const MODES = {
+  hex: { filter: /[^0-9a-fA-F]/g, max: 6, placeholder: '000000', hash: true },
+  rgb: { filter: /[^0-9,\s]/g,    max: 15, placeholder: '255 128 0', hash: false },
+  hsl: { filter: /[^0-9,\s]/g,    max: 15, placeholder: '210 50 40', hash: false },
+};
+
+// pull up to 3 numbers from "255 128 0" / "255,128,0"
+function triplet(raw){
+  const p = raw.split(/[\s,]+/).filter(Boolean).map(Number);
+  if(p.length !== 3 || p.some(n => !Number.isFinite(n))) return null;
+  return p;
+}
+
+function toHexByte(n){
+  n = Math.round(Math.min(255, Math.max(0, n)));
+  return n.toString(16).padStart(2, '0');
+}
+
+function rgbToHexStr(r, g, b){
+  return toHexByte(r) + toHexByte(g) + toHexByte(b);
+}
+
+function hslToHexStr(h, s, l){
+  h = ((h % 360) + 360) % 360; s = Math.min(100, Math.max(0, s)) / 100; l = Math.min(100, Math.max(0, l)) / 100;
+  const c = (1 - Math.abs(2*l - 1)) * s;
+  const x = c * (1 - Math.abs((h/60) % 2 - 1));
+  const m = l - c/2;
+  let r=0, g=0, b=0;
+  if(h < 60)       { r=c; g=x; }
+  else if(h < 120) { r=x; g=c; }
+  else if(h < 180) { g=c; b=x; }
+  else if(h < 240) { g=x; b=c; }
+  else if(h < 300) { r=x; b=c; }
+  else             { r=c; b=x; }
+  return rgbToHexStr((r+m)*255, (g+m)*255, (b+m)*255);
+}
+
+// raw (in current mode) -> 6-char hex, or null
+function rawToHex(raw){
+  if(state.mode === 'hex') return normalize(raw);
+  const t = triplet(raw);
+  if(!t) return null;
+  if(state.mode === 'rgb'){
+    if(t.some(n => n > 255)) return null;
+    return rgbToHexStr(t[0], t[1], t[2]);
+  }
+  if(t[0] > 360 || t[1] > 100 || t[2] > 100) return null;
+  return hslToHexStr(t[0], t[1], t[2]);
+}
+
+// per-channel max for grouping/clamping bare digits
+const MODE_MAX = {
+  rgb: [255, 255, 255],
+  hsl: [360, 100, 100],
+};
+
+// "255128000" -> "255 128 0"; only groups when the user typed no separator yet
+function autoGroup(str){
+  if(state.mode === 'hex') return str;
+  if(/[\s,]/.test(str)) return str;          // user is placing their own spaces
+  const digits = str.replace(/\D/g, '');
+  if(!digits) return str;
+  const max = MODE_MAX[state.mode];
+  const groups = [];
+  let i = 0;
+  while(i < digits.length && groups.length < 3){
+    const cap = max[groups.length];
+    if(digits[i] === '0'){                    // leading zero -> that channel is just "0"
+      groups.push('0'); i++; continue;
+    }
+    let g = digits[i]; i++;                    // take 2nd and 3rd digit while <= cap
+    while(i < digits.length && g.length < 3 && Number(g + digits[i]) <= cap){
+      g += digits[i]; i++;
+    }
+    groups.push(g);
+  }
+  return groups.join(' ');   // extra digits beyond 3 channels are dropped
+}
+
+// clamp each channel to <=3 digits, <= its max, and at most 3 channels
+// (used when the user types their own separators so autoGroup backs off)
+function clampChannels(str){
+  const max = MODE_MAX[state.mode];
+  const trailing = /[\s,]$/.test(str);
+  let parts = str.split(/[\s,]+/).filter(function(p, i){ return p !== '' || i === 0; });
+  parts = parts.slice(0, 3).map(function(p, i){
+    p = p.replace(/\D/g, '').slice(0, 3);
+    if(p !== '' && Number(p) > max[i]) p = String(max[i]);
+    return p;
+  });
+  let out = parts.join(' ');
+  if(trailing && parts.length < 3) out += ' ';   // keep the space the user just typed
+  return out;
+}
+
+function cleanInput(str){
+  const m = MODES[state.mode];
+  let out = str.replace(m.filter, '').slice(0, m.max);
+  if(state.mode === 'hex'){ out = out.toLowerCase(); return out; }
+  return /[\s,]/.test(out) ? clampChannels(out) : autoGroup(out);
+}
+
+// express a resolved hex as the raw input string for a given mode
+function hexToRaw(hexFull, mode){
+  if(mode === 'hex') return hexFull;
+  const c = hexToRgb(hexFull);
+  if(mode === 'rgb') return c.r + ' ' + c.g + ' ' + c.b;
+  const hsl = rgbToHsl(c.r, c.g, c.b);
+  return hsl.h + ' ' + hsl.s + ' ' + hsl.l;
 }
 
 function rgbToHsl(r, g, b){
@@ -146,7 +262,7 @@ const EMPTY = {
 function compute(){
   if(state.raw === '') return EMPTY;
 
-  const hexFull = normalize(state.raw);
+  const hexFull = rawToHex(state.raw);
   if(!hexFull) return EMPTY;
 
   const c = hexToRgb(hexFull);
@@ -170,10 +286,13 @@ function syncTail(){
   el.fmt.querySelectorAll('button').forEach(function(b){
     b.setAttribute('aria-pressed', b.dataset.v === state.format);
   });
+  el.mode.querySelectorAll('button').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.v === state.mode);
+  });
 
   clearTimeout(hashTimer);
   hashTimer = setTimeout(function(){
-    const valid = normalize(state.raw);
+    const valid = rawToHex(state.raw);   // resolved hex is the shareable value
     const url = valid ? '#' + valid : location.pathname;
     try {
       // new distinct color -> add a history entry so browser Back works
@@ -199,6 +318,9 @@ function render(){
     document.documentElement.style.setProperty('--accent', 'rgba(255,255,255,0.30)');
     el.family.textContent = '';
     el.name.textContent   = 'name a color';
+    el.rgb._copied = el.hsl._copied = false;
+    el.rgb.classList.remove('copied');
+    el.hsl.classList.remove('copied');
     el.rgb.textContent    = '';
     el.hsl.textContent    = '';
     el.copy.textContent   = 'Copy';
@@ -215,11 +337,21 @@ function render(){
 
   el.family.textContent = v.family + ' \u00b7 ' + v.l + '% light';
   el.name.textContent   = v.name;
-  el.rgb.textContent    = 'RGB ' + v.r + ' ' + v.g + ' ' + v.b;
-  el.hsl.textContent    = 'HSL ' + v.h + ' ' + v.s + ' ' + v.l;
-  el.copy.textContent   = state.copied
-    ? (state.copiedWhat === 'hex' ? 'Hex copied \u2713' : 'Name copied \u2713')
-    : (copyingHex() ? 'Copy hex' : 'Copy name');
+
+  // show the two representations the user is NOT currently typing in
+  const reps = {
+    hex: 'HEX ' + v.hexFull,
+    rgb: 'RGB ' + v.r + ' ' + v.g + ' ' + v.b,
+    hsl: 'HSL ' + v.h + ' ' + v.s + ' ' + v.l,
+  };
+  const others = ['hex', 'rgb', 'hsl'].filter(function(k){ return k !== state.mode; });
+  if(!el.rgb._copied) el.rgb.textContent = reps[others[0]];
+  if(!el.hsl._copied) el.hsl.textContent = reps[others[1]];
+
+  const tgt = copyTarget(v);
+  el.copy.textContent = state.copied
+    ? state.copiedWhat + ' copied \u2713'
+    : (copyingHex() ? 'Copy ' + tgt.label : 'Copy name');
 
   document.title = 'Name a Color';
 
@@ -291,14 +423,30 @@ function copyingHex(){
   return !!(sel && sel.toString().trim() !== '' && el.hex.contains(sel.anchorNode));
 }
 
+// what the Copy button acts on, based on the active input mode
+function copyTarget(v){
+  if(state.mode === 'rgb') return { label: 'RGB', value: v.r + ' ' + v.g + ' ' + v.b };
+  if(state.mode === 'hsl') return { label: 'HSL', value: v.h + ' ' + v.s + ' ' + v.l };
+  return { label: 'hex', value: v.hexFull };
+}
+
 function doCopy(){
   if(!DB) return;
   const v = compute();
   if(!v.hexFull || !v.name) return;
-  const hex = copyingHex();
-  writeClipboard(hex ? v.hexFull : v.name);
+
+  const tgt = copyTarget(v);
+  let value, what;
+
+  if(copyingHex()){          // text selected inside the field -> copy that representation
+    value = tgt.value; what = tgt.label;
+  } else {                   // default in every mode -> copy the name
+    value = v.name; what = 'Name';
+  }
+
+  writeClipboard(value);
   state.copied = true;
-  state.copiedWhat = hex ? 'hex' : 'name';
+  state.copiedWhat = what.charAt(0).toUpperCase() + what.slice(1);
   render();
   clearTimeout(copyTimer);
   copyTimer = setTimeout(function(){ state.copied = false; render(); }, 1600);
@@ -307,7 +455,7 @@ function doCopy(){
 /* ---------- events ---------- */
 
 el.hex.addEventListener('input', function(){
-  const clean = fieldValue().replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  const clean = cleanInput(fieldValue());
   if(clean !== fieldValue()){
     setFieldValue(clean);
     caretToEnd();
@@ -325,7 +473,7 @@ document.addEventListener('selectionchange', function(){
 el.hex.addEventListener('paste', function(e){
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text') || '';
-  const pasted = text.replace(/[^0-9a-fA-F]/g,'').toLowerCase();
+  const pasted = text.replace(MODES[state.mode].filter, '');
 
   const cur = fieldValue();
   const sel = window.getSelection();
@@ -336,8 +484,7 @@ el.hex.addEventListener('paste', function(e){
     end   = Math.max(sel.anchorOffset, sel.focusOffset);
   }
 
-  const clean = (cur.slice(0,start) + pasted + cur.slice(end))
-    .replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+  const clean = cleanInput(cur.slice(0,start) + pasted + cur.slice(end));
 
   setFieldValue(clean);
   caretToEnd();
@@ -373,9 +520,65 @@ fastButton(el.fmt, function(e){
   render();
 });
 
+function applyMode(){
+  const m = MODES[state.mode];
+  el.hash.style.display = m.hash ? '' : 'none';
+  el.hex.setAttribute('data-placeholder', m.placeholder);
+  el.hex.setAttribute('aria-label', state.mode.toUpperCase() + ' value');
+}
+
+fastButton(el.mode, function(e){
+  const b = e.target.closest('button');
+  if(!b || b.dataset.v === state.mode) return;
+
+  const cur = compute();                 // current color before switching
+  state.mode = b.dataset.v;
+  state.raw = cur.hexFull ? hexToRaw(cur.hexFull, state.mode) : '';
+  state.copied = false;
+  setFieldValue(state.raw);
+  applyMode();
+  render();
+  focusField();
+});
+
 fastButton(el.copy, doCopy);
 fastButton(el.clear, clearAll);
 fastButton(el.home, clearAll);
+
+// click a readout pill to copy its value (label stripped), with in-place confirmation
+function pillCopy(pill){
+  return function(){
+    if(!DB || pill._copied) return;
+    const txt = pill.textContent.trim();
+    if(!txt) return;
+    const value = txt.replace(/^(HEX|RGB|HSL)\s+/, '');
+    writeClipboard(value);
+
+    pill._copied = true;
+    pill.classList.add('copied');
+    pill.textContent = 'Copied \u2713';
+
+    clearTimeout(pill._t);
+    pill._t = setTimeout(function(){
+      pill._copied = false;
+      pill.classList.remove('copied');
+      render();
+    }, 1000);
+  };
+}
+fastButton(el.rgb, pillCopy(el.rgb));
+fastButton(el.hsl, pillCopy(el.hsl));
+
+// Enter/Space activate the pills (span[role=button] doesn't do this natively)
+[el.rgb, el.hsl].forEach(function(pill){
+  const run = pillCopy(pill);
+  pill.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      run();
+    }
+  });
+});
 
 // Esc on the input itself — some browsers (Arc) intercept Escape at the
 // window level, so this local listener catches it when the field is focused.
@@ -423,12 +626,13 @@ window.addEventListener('keydown', function(e){
     return;
   }
 
-  // type-ahead: typing a hex char anywhere focuses the field and adds it
+  // type-ahead: typing a valid char anywhere focuses the field and adds it
   if(e.metaKey || e.ctrlKey || e.altKey) return;
   if(document.activeElement === el.hex) return;
-  if(/^[0-9a-fA-F]$/.test(e.key)){
+  const typeable = state.mode === 'hex' ? /^[0-9a-fA-F]$/ : /^[0-9]$/;
+  if(typeable.test(e.key)){
     e.preventDefault();
-    const clean = (fieldValue() + e.key).replace(/[^0-9a-fA-F]/g,'').toLowerCase().slice(0,6);
+    const clean = cleanInput(fieldValue() + e.key);
     setFieldValue(clean);
     state.raw = clean;
     state.copied = false;
@@ -461,15 +665,19 @@ fastButton(el.glowToggle, function(){
 
 /* ---------- init ---------- */
 
+applyMode();
+
 const fromHash = location.hash.replace('#','').toLowerCase();
 if(/^([0-9a-f]{3}|[0-9a-f]{6})$/.test(fromHash)) state.raw = fromHash;
 setFieldValue(state.raw);
 lastPushed = normalize(state.raw);
 
-// browser back/forward -> load the color from the URL
+// browser back/forward -> load the color from the URL (always as hex)
 window.addEventListener('popstate', function(){
   const h = location.hash.replace('#','').toLowerCase();
   const valid = /^([0-9a-f]{3}|[0-9a-f]{6})$/.test(h);
+  state.mode = 'hex';
+  applyMode();
   state.raw = valid ? h : '';
   lastPushed = valid ? normalize(h) : null;
   state.copied = false;

@@ -74,13 +74,21 @@
 
   <div class="meta">
     <div class="pills">
-      <span class="pill" id="rgb"></span>
-      <span class="pill" id="hsl"></span>
+      <span class="pill" id="rgb" role="button" tabindex="0" title="Click to copy" aria-live="polite"></span>
+      <span class="pill" id="hsl" role="button" tabindex="0" title="Click to copy" aria-live="polite"></span>
     </div>
     <button class="copy" id="copy" type="button">Copy</button>
   </div>
 
   <div class="settings">
+    <div class="group">
+      <div class="grouplabel">Input</div>
+      <div class="segs" id="mode">
+        <button data-v="hex" type="button">HEX</button>
+        <button data-v="rgb" type="button">RGB</button>
+        <button data-v="hsl" type="button">HSL</button>
+      </div>
+    </div>
     <div class="group">
       <div class="grouplabel">Format</div>
       <div class="segs" id="fmt">
@@ -102,7 +110,7 @@
   <span class="dot">·</span>
   <span><a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)</span>
   <span class="dot">·</span>
-  <span>v2.2</span>
+  <span>v2.3</span>
 </footer>
 
 <script src="colors.js"></script>
