@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Name a Color</title>
+<meta name="description" content="Enter a hex code and get a color name.">
+<meta name="theme-color" content="#0c0c0e">
+
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Name a Color">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Name a Color">
+<meta property="og:description" content="Enter a hex code and get a color name.">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="is-empty">
+
+<div class="glow" id="glow"></div>
+
+<header class="topbar">
+  <button id="home" class="wordmark" type="button">Name a Color</button>
+  <div class="topbar-right">
+    <button id="glowToggle" class="glowtoggle" type="button" aria-pressed="true" aria-label="Toggle background glow" title="Toggle glow">
+      <svg class="glow-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+      </svg>
+      <svg class="glow-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M2 12h2M20 12h2M12 20v2"></path>
+        <line x1="3" y1="3" x2="21" y2="21"></line>
+      </svg>
+      <span class="glowtoggle-label">Glow</span>
+    </button>
+  </div>
+</header>
+
+<main class="stage">
+
+  <div class="swatch" id="swatch"></div>
+
+  <div class="family" id="family"></div>
+
+  <h1 class="name" id="name" aria-live="polite">name a color</h1>
+
+  <div class="hexwrap">
+    <span class="hash">#</span>
+    <span id="hex" class="hexfield"
+          contenteditable="plaintext-only"
+          role="textbox"
+          aria-label="Hex code"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          data-placeholder="000000"></span>
+    <button id="clear" class="clear" type="button" aria-label="Clear" title="Esc to clear">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <div class="meta">
+    <div class="pills">
+      <span class="pill" id="rgb" role="button" tabindex="0" title="Click to copy" aria-live="polite"></span>
+      <span class="pill" id="hsl" role="button" tabindex="0" title="Click to copy" aria-live="polite"></span>
+    </div>
+    <button class="copy" id="copy" type="button">Copy</button>
+  </div>
+
+  <div class="settings">
+    <div class="group">
+      <div class="grouplabel">Input</div>
+      <div class="segs" id="mode">
+        <button data-v="hex" type="button">HEX</button>
+        <button data-v="rgb" type="button">RGB</button>
+        <button data-v="hsl" type="button">HSL</button>
+      </div>
+    </div>
+    <div class="group">
+      <div class="grouplabel">Format</div>
+      <div class="segs" id="fmt">
+        <button data-v="title" type="button">Title Case</button>
+        <button data-v="lower" type="button">lowercase</button>
+        <button data-v="dash" type="button">lower-dash</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint"><kbd>⌘/Ctrl</kbd>+<kbd>C</kbd> copy · <kbd>Esc</kbd> clear</div>
+
+</main>
+
+<footer class="footer">
+  <span>Made with ♥ by Alex Ghit</span>
+  <span class="dot">·</span>
+  <a href="mailto:alex@hey5.studio">alex@hey5.studio</a>
+  <span class="dot">·</span>
+  <span><a href="https://github.com/meodai/color-names" target="_blank" rel="noopener noreferrer">Color names</a> by David Aerne (MIT)</span>
+  <span class="dot">·</span>
+  <span>v2.3</span>
+</footer>
+
+<script src="colors.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
