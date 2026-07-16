@@ -2,6 +2,6 @@ name = "name-a-color"
 compatibility_date = "2026-07-10"
 
 [assets]
-directory = "."
+directory = "site"
 not_found_handling = "none"
 html_handling = "auto-trailing-slash"

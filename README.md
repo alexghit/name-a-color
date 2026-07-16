@@ -1,14 +1,21 @@
 # Name a Color
 
-Enter a hex code, get a color name. No API calls — the name list is bundled and matched locally in CIE Lab space.
+Enter a hex code, get the name of the closest color to it.
 
-Live: https://colors.hey5.studio
+Live at [colors.hey5.studio](https://colors.hey5.studio).
 
-## Features
+## What it does
 
-- Type any hex character anywhere on the page to start — the field focuses automatically.
-- Paste over the selected hex to replace it instantly.
-- Glow toggle (top-right) turns off the animated background glow for reduced-motion / accessibility. Remembered per browser; defaults off if the OS has reduced-motion enabled.
+`#3A7BD5` doesn't tell you anything. "Fibonacci Blue" does. This takes any hex code and finds the nearest match out of 4,420 curated color names.
+
+Matching happens in CIE Lab space rather than raw RGB, which matters: RGB distance treats all channels equally, so it'll often hand you a name that's mathematically close but looks wrong. Lab is built to approximate how human vision actually perceives difference, so the name you get back is the one that genuinely looks closest.
+
+The whole name list is bundled into the page — no API calls, no network round-trip, no rate limits. Lookups are instant and it works offline.
+
+- **Type anywhere to start** — no clicking into the field first, it focuses itself
+- **Paste to replace** — paste over the selected hex and it swaps instantly
+- **HEX / RGB / HSL input** — toggle between them; your value carries across the switch, and the pills show the other two formats, click to copy
+- **Glow toggle** — turns off the animated background glow, remembered per browser and defaults off if your OS asks for reduced motion
 
 ### Shortcuts
 
@@ -18,31 +25,19 @@ Live: https://colors.hey5.studio
 | `Cmd/Ctrl` + `C` | Copy hex if selected, otherwise the color name |
 | `Esc` | Clear |
 
-## Files
+## How it's built
 
-| File | Purpose |
-|---|---|
-| `index.html` | Markup |
-| `style.css` | Styles |
-| `script.js` | Lab conversion + nearest-name lookup |
-| `colors.js` | 4,420 curated names (1–2 words) |
-| `_headers` | Cloudflare cache/security headers |
-| `favicon.ico` `favicon.svg` | Browser tab icons |
-| `apple-touch-icon.png` | iOS home screen (180×180) |
-| `icon-192.png` `icon-512.png` `icon-512-maskable.png` | PWA icons |
-| `site.webmanifest` | PWA manifest |
+Vanilla HTML/CSS/JS, no framework or build step. `script.js` holds the Lab conversion and nearest-name lookup; `colors.js` is the bundled name list.
 
-`preview.html` is a single-file build for local testing. Not deployed.
+```
+site/  the deployed app — index.html, script.js, style.css, colors.js,
+       icons, manifest, and Cloudflare's _headers
+```
 
-## Deploy
-
-Static site, no build step.
-
-Cloudflare Pages → connect repo → build command empty, output directory `/`.
+`wrangler.toml` points Cloudflare's asset root at `site/`.
 
 ## Credits
 
 Color names from [color-names](https://github.com/meodai/color-names) by David Aerne, MIT licensed. See `LICENSE-color-names.txt`.
 
 Built by Alex Ghit — alex@hey5.studio
-
