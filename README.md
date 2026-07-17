@@ -30,12 +30,14 @@ The whole name list is bundled into the page — no API calls, no network round-
 Vanilla HTML/CSS/JS, no framework or build step.
 
 ```
-index.html   the whole app — markup, CSS, JS and favicon inlined
-colors.js    the 4,420-name dataset, kept separate so it caches
-             across visits instead of re-downloading with the page
+site/index.html   the whole app — markup, CSS, JS and favicon inlined
+site/colors.js    the 4,420-name dataset, kept separate so it caches
+                  across visits instead of re-downloading with the page
 ```
 
-`wrangler.toml` serves the repo root and falls back to `index.html` for any unmatched path, so a wrong URL lands on the app rather than a 404.
+`site/` also holds robots.txt, sitemap.xml and icon128.png — crawlers and link previews fetch those by URL, so they can't be inlined.
+
+`wrangler.toml` points Cloudflare's asset root at `site/` and falls back to `index.html` for any unmatched path, so a wrong URL lands on the app rather than a 404.
 
 ## Credits
 
