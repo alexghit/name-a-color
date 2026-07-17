@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://colors.hey5.studio/sitemap.xml
